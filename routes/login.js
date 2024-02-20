@@ -14,7 +14,7 @@ router.post("/login", async (req, res) => {
     } else {
       user = await User.findOne({ email });
 
-      if (!user || !(await bcrypt.compare(password, user.passwod))) {
+      if (!user || !(await bcrypt.compare(password, user.password))) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
     }
@@ -22,7 +22,7 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign({ email: user.email }, process.env.AuthSecretKey, {
       expiresIn: "1d",
     });
-    res.json({ message: "User login", data: { user, token } });
+    res.json({ message: "User login", data: { ...user._doc, token } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server error" });

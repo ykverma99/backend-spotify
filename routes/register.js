@@ -1,6 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import User from "../model/userModel.js";
+import bcrypt from "bcrypt";
 
 const router = express.Router();
 
@@ -25,9 +26,10 @@ router.post("/register", async (req, res) => {
       }
     }
     const dob = body.DOB.length > 0 ? body.DOB : new Date();
+    const password = await bcrypt.hash(body.password, 10);
     const user = new User({
       email: body.email,
-      password: body.password,
+      password: password,
       DOB: dob,
       name: body.name,
       authOUserId: body.authOUserId,
@@ -38,7 +40,10 @@ router.post("/register", async (req, res) => {
     });
     res
       .status(201)
-      .json({ message: "User is registered", data: { saveUser, token } });
+      .json({
+        message: "User is registered",
+        data: { ...saveUser._doc, token },
+      });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server error" });
