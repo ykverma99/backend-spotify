@@ -1,6 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import User from "../model/userModel.js";
+import Artist from "../model/artistModel.js";
 import bcrypt from "bcrypt";
 
 const router = express.Router();
@@ -38,16 +39,46 @@ router.post("/register", async (req, res) => {
     const token = jwt.sign({ email: user.email }, process.env.AuthSecretKey, {
       expiresIn: "1d",
     });
-    res
-      .status(201)
-      .json({
-        message: "User is registered",
-        data: { ...saveUser._doc, token },
-      });
+    res.status(201).json({
+      message: "User is registered",
+      data: { ...saveUser._doc, token },
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server error" });
   }
 });
 
+// artist register
+
+router.post("/register/artist", async (req, res) => {
+  const { name, email, password, profilePhoto, album, single } = req.body;
+
+  try {
+    const existingArtist = await Artist.findOne({ email });
+    if (existingArtist) {
+      res.status(401).json({ error: "Email is Already exist" });
+      return;
+    } else {
+      const hashPassword = await bcrypt.hash(password, 10);
+      const artist = await Artist.create({
+        email,
+        name,
+        password: hashPassword,
+        profilePhoto,
+        album,
+        single,
+      });
+      const saveArtst = await artist.save();
+
+      res.status(201).json({
+        message: "Artist registered",
+        data: { saveArtst },
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server error" });
+  }
+});
 export default router;
