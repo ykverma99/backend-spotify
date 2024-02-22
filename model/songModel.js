@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const songsSchema = new mongoose.Schema({
   songName: String,
+  songUrl: String,
   artist: [
     {
       type: mongoose.Schema.Types.ObjectId,

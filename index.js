@@ -5,6 +5,10 @@ import pkg from "express-openid-connect";
 import cors from "cors";
 import register from "./routes/register.js";
 import login from "./routes/login.js";
+import artist from "./routes/artist.js";
+import user from "./routes/user.js";
+import album from "./routes/album.js";
+import singleTrack from "./routes/singleTrack.js";
 import authenticate from "./middleware/authenticate.js";
 const { auth, requiresAuth } = pkg;
 
@@ -46,6 +50,10 @@ app.get("/protect", authenticate, (req, res) => {
 
 app.use(register);
 app.use(login);
+app.use(artist);
+app.use(user);
+app.use(album);
+app.use(singleTrack);
 
 app.listen(port, () => {
   console.log(`server is listing on http://localhost/${port}`);

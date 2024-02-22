@@ -41,7 +41,7 @@ router.post("/login/artist", async (req, res) => {
         return res.status(401).json({ error: "Invalid credentials" });
       }
     }
-    res.json({ message: "Artist login", data: { ...user } });
+    res.json({ message: "Artist login", data: { user } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server error" });
