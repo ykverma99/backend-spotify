@@ -12,6 +12,7 @@ router.post("/login", async (req, res) => {
     let user;
     if (authOUserId) {
       user = await User.findOne({ authOUserId });
+      console.log(user);
     } else {
       user = await User.findOne({ email });
 
@@ -19,7 +20,6 @@ router.post("/login", async (req, res) => {
         return res.status(401).json({ error: "Invalid credentials" });
       }
     }
-
     const token = jwt.sign({ email: user.email }, process.env.AuthSecretKey, {
       expiresIn: "1d",
     });

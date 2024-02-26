@@ -9,6 +9,7 @@ import artist from "./routes/artist.js";
 import user from "./routes/user.js";
 import album from "./routes/album.js";
 import singleTrack from "./routes/singleTrack.js";
+import song from "./routes/songs.js";
 import authenticate from "./middleware/authenticate.js";
 const { auth, requiresAuth } = pkg;
 
@@ -54,6 +55,7 @@ app.use(artist);
 app.use(user);
 app.use(album);
 app.use(singleTrack);
+app.use(song);
 
 app.listen(port, () => {
   console.log(`server is listing on http://localhost/${port}`);

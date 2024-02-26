@@ -2,6 +2,7 @@ import express from "express";
 import Songs from "../model/songModel.js";
 import upload from "../middleware/multer.js";
 import storeCloud from "../middleware/storeCloud.js";
+import { Types } from "mongoose";
 
 const router = express.Router();
 
@@ -30,10 +31,23 @@ router.post("/song", upload.single("songUrl"), async (req, res) => {
 
 router.get("/song", async (req, res) => {
   try {
-    const song = await Songs.find();
-    res.status(200).json({ data: song });
+    let songs;
+
+    // Fetch all songs
+    const allSongs = await Songs.find().populate("artist album track");
+
+    if (req.query.random) {
+      // Randomly select six songs
+      const shuffledSongs = allSongs.sort(() => 0.5 - Math.random());
+      songs = shuffledSongs.slice(0, 6);
+    } else {
+      // Use all songs
+      songs = allSongs;
+    }
+
+    res.status(200).json({ data: songs });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -80,7 +94,7 @@ router.patch(
   }
 );
 
-router.delete("/artist/:identifier", async (req, res) => {
+router.delete("/song/:identifier", async (req, res) => {
   try {
     const identifier = req.params.identifier;
     const isObjectId = Types.ObjectId.isValid(identifier);

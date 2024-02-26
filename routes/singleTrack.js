@@ -2,6 +2,9 @@ import express from "express";
 import Track from "../model/singleTrackModel.js";
 import upload from "../middleware/multer.js";
 import storeCloud from "../middleware/storeCloud.js";
+import Songs from "../model/songModel.js";
+import { Types } from "mongoose";
+import Artist from "../model/artistModel.js";
 
 const router = express.Router();
 
@@ -20,6 +23,22 @@ router.post("/track", upload.single("trackImage"), async (req, res) => {
       songs,
     });
     const saveTrack = await track.save();
+
+    // also updating the artist model to store the track id
+    await Songs.updateMany(
+      { _id: { $in: songs } },
+      { $set: { track: saveTrack._id } }
+    );
+
+    // also updating the artist model to store the track id
+    await Artist.updateMany(
+      { _id: { $in: artist } },
+      { $set: { single: saveTrack._id } }
+    );
+    // const isArtist = await Artist.findById(artist);
+    // isArtist.single.push(saveTrack._id);
+    // await isArtist.save();
+
     res.status(200).json({ message: "Track Create", data: saveTrack });
   } catch (error) {
     console.log(error);
@@ -29,10 +48,31 @@ router.post("/track", upload.single("trackImage"), async (req, res) => {
 
 router.get("/track", async (req, res) => {
   try {
-    const track = await Track.find();
+    let track;
+
+    // Fetch all track
+    const allTracks = await Track.find()
+      .populate("artist")
+      .populate({
+        path: "songs",
+        populate: {
+          path: "artist",
+          model: "Artist",
+        },
+      });
+
+    if (req.query.random) {
+      // Randomly select six track
+      const shuffledTracks = allTracks.sort(() => 0.5 - Math.random());
+      track = shuffledTracks.slice(0, 6);
+    } else {
+      // Use all track
+      track = allTracks;
+    }
+
     res.status(200).json({ data: track });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -40,7 +80,15 @@ router.get("/track", async (req, res) => {
 router.get("/track/:name", async (req, res) => {
   try {
     const { name } = req.params;
-    const track = await Track.find({ trackName: name });
+    const track = await Track.find({ trackName: name })
+      .populate("artist")
+      .populate({
+        path: "songs",
+        populate: {
+          path: "artist",
+          model: "Artist",
+        },
+      });
     if (!track) {
       res.status(401).json({ error: "No Track Found" });
       return;
@@ -79,7 +127,7 @@ router.patch(
   }
 );
 
-router.delete("/artist/:identifier", async (req, res) => {
+router.delete("/track/:identifier", async (req, res) => {
   try {
     const identifier = req.params.identifier;
     const isObjectId = Types.ObjectId.isValid(identifier);

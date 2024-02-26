@@ -10,7 +10,21 @@ const router = express.Router();
 router.get("/artist", async (req, res) => {
   try {
     // in this popuate we want to add populate
-    const artists = await Artist.find();
+    const artists = await Artist.find()
+      .populate({
+        path: "album",
+        populate: {
+          path: "songs",
+          model: "Songs",
+        },
+      })
+      .populate({
+        path: "single",
+        populate: {
+          path: "songs",
+          model: "Songs",
+        },
+      });
     res.json({ data: artists });
   } catch (error) {
     console.log(error);
@@ -24,11 +38,39 @@ router.get("/artist/:identifier", async (req, res) => {
     const isObjectId = Types.ObjectId.isValid(identifier);
     let user = null;
     if (isObjectId) {
-      user = await Artist.findById(identifier);
+      user = await Artist.findById(identifier)
+        .populate({
+          path: "album",
+          populate: {
+            path: "songs",
+            model: "Songs",
+          },
+        })
+        .populate({
+          path: "single",
+          populate: {
+            path: "songs",
+            model: "Songs",
+          },
+        });
     } else {
       user = await Artist.find({
         $or: [{ email: identifier }, { name: identifier }],
-      });
+      })
+        .populate({
+          path: "album",
+          populate: {
+            path: "songs",
+            model: "Songs",
+          },
+        })
+        .populate({
+          path: "single",
+          populate: {
+            path: "songs",
+            model: "Songs",
+          },
+        });
     }
     if (!user) {
       res.status(400).json({ error: "No User Found" });

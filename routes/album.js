@@ -3,6 +3,8 @@ import Album from "../model/albumModel.js";
 import upload from "../middleware/multer.js";
 import storeCloud from "../middleware/storeCloud.js";
 import authenticate from "../middleware/authenticate.js";
+import Songs from "../model/songModel.js";
+import Artist from "../model/artistModel.js";
 
 const router = express.Router();
 
@@ -20,7 +22,24 @@ router.post("/album", upload.single("albumImage"), async (req, res) => {
       artist,
       songs,
     });
+
     const saveAlbum = await album.save();
+
+    // also updating the song model to store the album id
+    await Songs.updateMany(
+      { _id: { $in: songs } },
+      { $set: { album: saveAlbum._id } }
+    );
+    // also updating the artist model to store the album id
+    await Artist.updateMany(
+      { _id: { $in: artist } },
+      { $set: { album: saveAlbum._id } }
+    );
+
+    // const isArtist = await Artist.findById(artist);
+    // isArtist.album.push(saveAlbum._id);
+    // await isArtist.save();
+
     res.status(200).json({ message: "Album Create", data: saveAlbum });
   } catch (error) {
     console.log(error);
@@ -30,10 +49,37 @@ router.post("/album", upload.single("albumImage"), async (req, res) => {
 
 router.get("/album", async (req, res) => {
   try {
-    const albums = await Album.find();
+    let albums;
+
+    // Fetch all albums
+    const allAlbums = await Album.find()
+      .populate("artist")
+      .populate({
+        path: "songs",
+        model: "Songs",
+        populate: {
+          path: "artist",
+          model: "Artist",
+
+          populate: {
+            path: "album",
+            model: "Album",
+          },
+        },
+      });
+
+    if (req.query.random) {
+      // Randomly select six albums
+      const shuffledAlbums = allAlbums.sort(() => 0.5 - Math.random());
+      albums = shuffledAlbums.slice(0, 6);
+    } else {
+      // Use all albums
+      albums = allAlbums;
+    }
+
     res.status(200).json({ data: albums });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -41,7 +87,21 @@ router.get("/album", async (req, res) => {
 router.get("/album/:name", async (req, res) => {
   try {
     const { name } = req.params;
-    const album = await Album.find({ albumName: name });
+    const album = await Album.find({ albumName: name })
+      .populate("artist")
+      .populate({
+        path: "songs",
+        model: "Songs",
+        populate: {
+          path: "artist",
+          model: "Artist",
+
+          populate: {
+            path: "album",
+            model: "Album",
+          },
+        },
+      });
     if (!album) {
       res.status(401).json({ error: "No Album Found" });
       return;

@@ -14,7 +14,7 @@ const artistSchema = new mongoose.Schema({
   single: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "SingleTrack",
+      ref: "Track",
     },
   ],
   created_at: { type: Date, default: Date.now },
