@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../model/userModel.js";
 import Artist from "../model/artistModel.js";
 import bcrypt from "bcrypt";
+import Playlist from "../model/playlistModel.js";
 
 const router = express.Router();
 
@@ -39,6 +40,15 @@ router.post("/register", async (req, res) => {
     const token = jwt.sign({ email: user.email }, process.env.AuthSecretKey, {
       expiresIn: "1d",
     });
+    const { playlistName, madeBy, songs, track, album } = req.body;
+
+    const playlist = new Playlist({
+      playlistName: "Liked Songs",
+      madeBy: "playlist",
+      user: saveUser._id,
+    });
+    const savePlaylist = await playlist.save();
+    saveUser.playlist.push(savePlaylist._id);
     res.status(201).json({
       message: "User is registered",
       data: { ...saveUser._doc, token },

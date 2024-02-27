@@ -55,7 +55,9 @@ router.get("/song", async (req, res) => {
 router.get("/song/:name", async (req, res) => {
   try {
     const { name } = req.params;
-    const song = await Songs.find({ songName: name });
+    const song = await Songs.find({ songName: name }).populate(
+      "artist album track"
+    );
     if (!song) {
       res.status(401).json({ error: "No Songs Found" });
       return;

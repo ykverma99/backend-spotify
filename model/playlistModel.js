@@ -3,7 +3,10 @@ import mongoose from "mongoose";
 const playlistSchema = new mongoose.Schema({
   playlistName: String,
   madeBy: String,
-
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   songs: [
     {
       type: mongoose.Schema.Types.ObjectId,
