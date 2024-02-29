@@ -36,22 +36,28 @@ router.post("/register", async (req, res) => {
       name: body.name,
       authOUserId: body.authOUserId,
     });
-    const saveUser = await user.save();
     const token = jwt.sign({ email: user.email }, process.env.AuthSecretKey, {
       expiresIn: "1d",
     });
-    const { playlistName, madeBy, songs, track, album } = req.body;
-
     const playlist = new Playlist({
       playlistName: "Liked Songs",
       madeBy: "playlist",
-      user: saveUser._id,
+      user: user._id,
     });
     const savePlaylist = await playlist.save();
-    saveUser.playlist.push(savePlaylist._id);
+    user.playlist.push(savePlaylist._id);
+    const saveUser = await user.save();
+    const findUser = await User.findById(saveUser._id).populate({
+      path: "playlist",
+      model: "Playlist",
+      populate: [
+        { path: "track", model: "Track" },
+        { path: "album", model: "Album" },
+      ],
+    });
     res.status(201).json({
       message: "User is registered",
-      data: { ...saveUser._doc, token },
+      data: { ...findUser._doc, token },
     });
   } catch (error) {
     console.error(error);

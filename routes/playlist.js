@@ -1,7 +1,5 @@
 import express from "express";
-import Songs from "../model/songModel.js";
-import upload from "../middleware/multer.js";
-import storeCloud from "../middleware/storeCloud.js";
+import User from "../model/userModel.js";
 import { Types } from "mongoose";
 import Playlist from "../model/playlistModel.js";
 
@@ -20,7 +18,19 @@ router.post("/playlist", async (req, res) => {
       user,
     });
     const savePlaylist = await playlist.save();
-    res.status(200).json({ message: "playlistcreate", data: savePlaylist });
+    console.log(savePlaylist);
+    const findUser = await User.findById(user);
+    findUser.playlist.push(savePlaylist._id);
+    await findUser.save();
+    const sendUser = await User.findById(user).populate({
+      path: "playlist",
+      model: "Playlist",
+      populate: [
+        { path: "track", model: "Track" },
+        { path: "album", model: "Album" },
+      ],
+    });
+    res.status(200).json({ message: "playlistcreate", data: sendUser });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -29,7 +39,22 @@ router.post("/playlist", async (req, res) => {
 
 router.get("/playlist", async (req, res) => {
   try {
-    const playlists = await Playlist.find().populate("user songs track album");
+    const playlists = await Playlist.find()
+      .populate({
+        path: "songs",
+        model: "Songs",
+        populate: [
+          {
+            path: "track",
+            model: "Track", // Assuming 'track' is a reference to the Track model
+          },
+          {
+            path: "album",
+            model: "Album",
+          },
+        ],
+      })
+      .populate("user track album");
     res.status(200).json({ data: playlists });
   } catch (error) {
     console.log(error);
@@ -43,13 +68,93 @@ router.get("/playlist/:identifier", async (req, res) => {
     const isObjectId = Types.ObjectId.isValid(identifier);
     let playlist;
     if (isObjectId) {
-      playlist = await Playlist.findById(identifier).populate(
-        "user songs track album"
-      );
+      playlist = await Playlist.findById(identifier)
+        .populate({
+          path: "songs",
+          model: "Songs",
+          populate: [
+            {
+              path: "track",
+              model: "Track", // Assuming 'track' is a reference to the Track model
+            },
+            {
+              path: "album",
+              model: "Album",
+            },
+            {
+              path: "artist",
+              model: "Artist",
+            },
+          ],
+        })
+        .populate({
+          path: "track",
+          model: "Track",
+          populate: [
+            {
+              path: "artist",
+              model: "Artist",
+            },
+            {
+              path: "songs",
+              model: "Songs",
+            },
+          ],
+        })
+        .populate({
+          path: "album",
+          model: "Album",
+          populate: [
+            {
+              path: "artist",
+              model: "Artist",
+            },
+            {
+              path: "songs",
+              model: "Songs",
+            },
+          ],
+        })
+        .populate("user");
     } else {
-      playlist = await Playlist.findOne({ playlistName: identifier }).populate(
-        "user songs track album"
-      );
+      playlist = await Playlist.findOne({ playlistName: identifier })
+        .populate({
+          path: "songs",
+          model: "Songs",
+          populate: [
+            {
+              path: "track",
+              model: "Track", // Assuming 'track' is a reference to the Track model
+            },
+            {
+              path: "album",
+              model: "Album",
+            },
+          ],
+        })
+        .populate({
+          path: "track",
+          model: "Track",
+          populate: [
+            {
+              path: "artist",
+              model: "Artist",
+            },
+            {
+              path: "songs",
+              model: "Songs",
+            },
+          ],
+        })
+        .populate({
+          path: "album",
+          model: "Album",
+          populate: {
+            path: "artist",
+            model: "Artist",
+          },
+        })
+        .populate("user");
     }
     if (!playlist) {
       res.status(400).json({ error: "No User Found" });

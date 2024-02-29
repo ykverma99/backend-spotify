@@ -8,7 +8,14 @@ const router = express.Router();
 router.get("/user", async (req, res) => {
   try {
     // in this popuate we want to add populate
-    const users = await User.find();
+    const users = await User.find().populate({
+      path: "playlist",
+      model: "Playlist",
+      populate: [
+        { path: "track", model: "Track" },
+        { path: "album", model: "Album" },
+      ],
+    });
     res.json({ data: users });
   } catch (error) {
     console.log(error);
@@ -22,10 +29,24 @@ router.get("/user/:identifier", async (req, res) => {
     const isObjectId = Types.ObjectId.isValid(identifier);
     let user = null;
     if (isObjectId) {
-      user = await User.findById(identifier);
+      user = await User.findById(identifier).populate({
+        path: "playlist",
+        model: "Playlist",
+        populate: [
+          { path: "track", model: "Track" },
+          { path: "album", model: "Album" },
+        ],
+      });
     } else {
       user = await User.find({
         $or: [{ email: identifier }, { name: identifier }],
+      }).populate({
+        path: "playlist",
+        model: "Playlist",
+        populate: [
+          { path: "track", model: "Track" },
+          { path: "album", model: "Album" },
+        ],
       });
     }
     if (!user) {

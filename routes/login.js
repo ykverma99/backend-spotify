@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import User from "../model/userModel.js";
 import Artist from "../model/artistModel.js";
+import Playlist from "../model/playlistModel.js";
 
 const router = express.Router();
 
@@ -11,10 +12,23 @@ router.post("/login", async (req, res) => {
     const { email, password, authOUserId } = req.body;
     let user;
     if (authOUserId) {
-      user = await User.findOne({ authOUserId });
-      console.log(user);
+      user = await User.findOne({ authOUserId }).populate({
+        path: "playlist",
+        model: "Playlist",
+        populate: [
+          { path: "track", model: "Track" },
+          { path: "album", model: "Album" },
+        ],
+      });
     } else {
-      user = await User.findOne({ email });
+      user = await User.findOne({ email }).populate({
+        path: "playlist",
+        model: "Playlist",
+        populate: [
+          { path: "track", model: "Track" },
+          { path: "album", model: "Album" },
+        ],
+      });
 
       if (!user || !(await bcrypt.compare(password, user.password))) {
         return res.status(401).json({ error: "Invalid credentials" });
