@@ -38,7 +38,7 @@ connectToDb();
 const authConfig = {
   authRequired: false,
   auth0Logout: true,
-  baseURL: `http://localhost/${port}`,
+  baseURL: `https://backend-spotify.vercel.app`, // if you want to run the code in local then change this path
   clientID: "fM8Fpatg9lXhcLPS3NSTEOPb6mBv0RTB",
   issuerBaseURL: "https://dev-6mhgsugoalkijgk7.us.auth0.com",
   secret: "5uKpUhUSTH1GCdMUrDFtlMesnEdjJtbsTNoCByxZ3uXH3KM-Ei5sISFS44gkZkpH",
